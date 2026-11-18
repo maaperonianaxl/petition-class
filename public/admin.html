@@ -16,7 +16,24 @@
 <p id="statsMsg" class="msg" role="status"></p>
 
 <div class="card">
-  <h2>Petitions Awaiting Final Approval</h2>
+  <div class="card">
+  <h2>Search &amp; Filter Petition Records</h2>
+  <p>Search petition subjects or student names, then narrow the list using status, semester, academic year, or sorting.</p>
+  <input id="recordSearch" type="search" placeholder="Search subject code, subject name, or student name" oninput="filterRecords()">
+  <div class="filter-grid">
+    <select id="recordStatus" onchange="filterRecords()"><option value="">All statuses</option>
+      <option>Pending</option><option>Under Review</option><option>Returned</option><option>Endorsed</option><option>Approved</option><option>Rejected</option>
+    </select>
+    <select id="recordSemester" onchange="filterRecords()"><option value="">All semesters</option></select>
+    <select id="recordYear" onchange="filterRecords()"><option value="">All academic years</option></select>
+    <select id="recordSort" onchange="filterRecords()"><option value="newest">Newest first</option><option value="oldest">Oldest first</option></select>
+  </div>
+  <p id="recordCount" role="status"></p>
+  <table><thead><tr><th>Subject</th><th>Student</th><th>Semester / Year</th><th>Status</th><th>Submitted</th></tr></thead>
+  <tbody id="recordRows"></tbody></table>
+</div>
+
+<h2>Petitions Awaiting Final Approval</h2>
   <p>Only petitions endorsed by a reviewer appear in this queue.</p>
   <table><thead><tr><th>Subject</th><th>Requested by</th><th>Submitted</th><th></th></tr></thead>
   <tbody id="petitionRows"></tbody></table>
@@ -66,6 +83,46 @@ async function loadStats() {
   } catch (e) {
     document.getElementById("statsMsg").textContent = "Could not load dashboard statistics: " + e.message;
   }
+}
+
+let allPetitionRecords = [];
+
+async function loadAllRecords() {
+  try {
+    allPetitionRecords = await api("/admin/all-petitions");
+    populateRecordFilters();
+    filterRecords();
+  } catch (e) {
+    recordRows.innerHTML = `<tr><td colspan="5">${esc(e.message)}</td></tr>`;
+  }
+}
+
+function populateRecordFilters() {
+  const semesters = [...new Set(allPetitionRecords.map(p => p.semester).filter(Boolean))].sort();
+  const years = [...new Set(allPetitionRecords.map(p => p.academicYear).filter(Boolean))].sort().reverse();
+  recordSemester.innerHTML = '<option value="">All semesters</option>' + semesters.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join("");
+  recordYear.innerHTML = '<option value="">All academic years</option>' + years.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join("");
+}
+
+function filterRecords() {
+  const term = recordSearch.value.trim().toLowerCase();
+  const status = recordStatus.value, semester = recordSemester.value, year = recordYear.value, sort = recordSort.value;
+  let records = allPetitionRecords.filter(p => {
+    const student = p.requestedBy?.fullName || "";
+    const searchable = [p.subjectCode, p.subjectName, student].join(" ").toLowerCase();
+    return (!term || searchable.includes(term)) && (!status || p.status === status) && (!semester || p.semester === semester) && (!year || p.academicYear === year);
+  });
+  records.sort((a, b) => {
+    const dateA = new Date(a.createdAt || 0).getTime(), dateB = new Date(b.createdAt || 0).getTime();
+    return sort === "oldest" ? dateA - dateB : dateB - dateA;
+  });
+  recordCount.textContent = `${records.length} petition record(s) found.`;
+  recordRows.innerHTML = records.map(p => `<tr>
+    <td>${esc(p.subjectCode)} - ${esc(p.subjectName)}</td>
+    <td>${esc(p.requestedBy?.fullName || "Unknown student")}</td>
+    <td>${esc(p.semester || "—")} / ${esc(p.academicYear || "—")}</td>
+    <td>${badge(p.status)}</td><td>${fmt(p.createdAt)}</td>
+  </tr>`).join("") || "<tr><td colspan='5'>No matching petitions found.</td></tr>";
 }
 
 async function loadPetitions() {
@@ -134,5 +191,6 @@ async function setRole(id, role) {
 
 loadStats();
 loadPetitions();
+loadAllRecords();
 loadUsers();
 </script></body></html>
