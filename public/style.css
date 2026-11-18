@@ -103,3 +103,9 @@ a { color: var(--blue); font-weight: 600; text-decoration: none; } a:hover { tex
   .stat-card { padding: 13px; }
   .stat-card strong { font-size: 25px; }
 }
+
+/* Petition search and filter controls */
+.filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+.filter-grid select { margin: 0 0 12px; }
+#recordSearch { margin-bottom: 12px; }
+#recordCount { color: var(--muted); font-size: 14px; font-weight: 500; }
