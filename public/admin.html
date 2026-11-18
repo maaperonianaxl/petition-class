@@ -4,6 +4,17 @@
 <body>
 <header><h1>Admin Dashboard</h1><button class="secondary" onclick="logout()">Log out</button></header>
 
+<div class="stats-grid" id="statsGrid">
+  <div class="stat-card"><span>Total Petitions</span><strong id="statTotal">—</strong></div>
+  <div class="stat-card pending-stat"><span>Pending</span><strong id="statPending">—</strong></div>
+  <div class="stat-card review-stat"><span>Under Review</span><strong id="statUnderReview">—</strong></div>
+  <div class="stat-card returned-stat"><span>Returned</span><strong id="statReturned">—</strong></div>
+  <div class="stat-card endorsed-stat"><span>Endorsed</span><strong id="statEndorsed">—</strong></div>
+  <div class="stat-card approved-stat"><span>Approved</span><strong id="statApproved">—</strong></div>
+  <div class="stat-card rejected-stat"><span>Rejected</span><strong id="statRejected">—</strong></div>
+</div>
+<p id="statsMsg" class="msg" role="status"></p>
+
 <div class="card">
   <h2>Petitions Awaiting Final Approval</h2>
   <p>Only petitions endorsed by a reviewer appear in this queue.</p>
@@ -35,6 +46,27 @@
 <script>
 guard("admin");
 let currentPetitionId = null;
+
+async function loadStats() {
+  const fields = {
+    total: "statTotal",
+    pending: "statPending",
+    underReview: "statUnderReview",
+    returned: "statReturned",
+    endorsed: "statEndorsed",
+    approved: "statApproved",
+    rejected: "statRejected"
+  };
+  try {
+    const stats = await api("/admin/stats");
+    for (const [key, elementId] of Object.entries(fields)) {
+      document.getElementById(elementId).textContent = stats[key] ?? 0;
+    }
+    document.getElementById("statsMsg").textContent = "";
+  } catch (e) {
+    document.getElementById("statsMsg").textContent = "Could not load dashboard statistics: " + e.message;
+  }
+}
 
 async function loadPetitions() {
   try {
@@ -100,6 +132,7 @@ async function setRole(id, role) {
   catch (e) { userMsg.className = "msg"; userMsg.textContent = e.message; }
 }
 
+loadStats();
 loadPetitions();
 loadUsers();
 </script></body></html>
