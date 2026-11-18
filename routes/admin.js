@@ -7,6 +7,36 @@ const { requireAuth, requireRole } = require("../middleware/auth");
 
 router.use(requireAuth, requireRole("admin"));
 
+
+ // Petition dashboard statistics
+router.get("/stats", async (req, res) => {
+  try {
+    const counts = await Petition.aggregate([
+      { $group: { _id: "$status", count: { $sum: 1 } } }
+    ]);
+    const stats = { total: 0, pending: 0, underReview: 0, returned: 0, endorsed: 0, approved: 0, rejected: 0 };
+    const statusKeys = {
+      "Pending": "pending",
+      "Under Review": "underReview",
+      "Returned": "returned",
+      "Endorsed": "endorsed",
+      "Approved": "approved",
+      "Rejected": "rejected"
+    };
+    for (const item of counts) {
+      const key = statusKeys[item._id];
+      if (key) {
+        stats[key] = item.count;
+        stats.total += item.count;
+      }
+    }
+    res.json(stats);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ message: "Could not load petition statistics." });
+  }
+});
+
 router.get("/users", async (req, res) => {
   try {
     res.json(await User.find().select("-passwordHash").sort({ createdAt: -1 }));
