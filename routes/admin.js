@@ -53,6 +53,19 @@ router.get("/petitions", async (req, res) => {
   } catch (e) { res.status(500).json({ message: "Server error." }); }
 });
 
+// Admin searchable petition records (separate from the final-approval queue)
+router.get("/all-petitions", async (req, res) => {
+  try {
+    const petitions = await Petition.find()
+      .populate("requestedBy", "fullName email")
+      .sort({ createdAt: -1 });
+    res.json(petitions);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ message: "Could not load petition records." });
+  }
+});
+
 // Admin makes the final decision after reviewer endorsement
 router.post("/petitions/:id/decision", async (req, res) => {
   try {
