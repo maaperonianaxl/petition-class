@@ -39,11 +39,48 @@ async function loadPetitions() {
 }
 
 async function showDetail(id) {
-  const d = await api("/petitions/" + id);
-  detail.innerHTML = `<h3>${esc(d.petition.subjectCode)} history</h3>
-    <p><b>Participants:</b> ${d.students.map(s => esc(s.studentName)).join(", ") || "none"}</p>
-    <ul>${d.approvals.map(a => `<li>${fmt(a.decidedAt)} - ${badge(a.decision)} ${esc(a.comments || "")}</li>`).join("")
-      || "<li>No decisions yet.</li>"}</ul>`;
+  try {
+    const d = await api("/petitions/" + id);
+    const petition = d.petition;
+    const events = [{
+      date: petition.createdAt,
+      title: "Petition submitted",
+      actor: petition.requestedBy?.fullName || "Student",
+      comments: "The petition was successfully submitted.",
+      type: "submitted"
+    }, ...d.approvals.map(a => ({
+      date: a.decidedAt,
+      title: a.decision,
+      actor: a.adminId?.fullName || a.reviewerId?.fullName || (a.stage === 2 ? "Admin" : "Reviewer"),
+      comments: a.comments || "",
+      type: a.stage === 2 ? "admin" : "reviewer"
+    }))];
+
+    detail.innerHTML = `
+      <div class="timeline-header">
+        <h3>${esc(petition.subjectCode)} - ${esc(petition.subjectName)}</h3>
+        <p>Current status: ${badge(petition.status)}</p>
+        <p><b>Participants:</b> ${d.students.map(s => esc(s.studentName)).join(", ") || "None listed"}</p>
+      </div>
+      <h3>Petition progress</h3>
+      <ol class="petition-timeline">
+        ${events.map((event, index) => `
+          <li class="timeline-event ${event.type}">
+            <div class="timeline-marker"></div>
+            <div class="timeline-content">
+              <strong>${esc(event.title)}</strong>
+              <small>${fmt(event.date)}</small>
+              <p class="timeline-actor">By: ${esc(event.actor)}</p>
+              ${event.comments ? `<p class="timeline-comments">${esc(event.comments)}</p>` : ""}
+            </div>
+          </li>`).join("")}
+      </ol>
+      <p class="timeline-current">Latest petition status: ${badge(petition.status)}</p>
+    `;
+    detail.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  } catch (e) {
+    detail.innerHTML = `<p class="msg">${esc(e.message)}</p>`;
+  }
 }
 
 async function loadNotes() {
