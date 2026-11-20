@@ -109,3 +109,49 @@ a { color: var(--blue); font-weight: 600; text-decoration: none; } a:hover { tex
 .filter-grid select { margin: 0 0 12px; }
 #recordSearch { margin-bottom: 12px; }
 #recordCount { color: var(--muted); font-size: 14px; font-weight: 500; }
+
+/* Student petition tracking timeline */
+.timeline-header {
+  background: #f8fafd;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin: 16px 0;
+}
+.timeline-header h3 { margin-top: 0; }
+.petition-timeline {
+  list-style: none;
+  padding: 4px 0 4px 10px;
+  margin: 12px 0 18px;
+}
+.timeline-event {
+  position: relative;
+  margin: 0;
+  padding: 0 0 22px 28px;
+  border-left: 2px solid #cbd5e1;
+}
+.timeline-event:last-child { border-left-color: transparent; padding-bottom: 0; }
+.timeline-marker {
+  position: absolute;
+  left: -7px;
+  top: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--blue);
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px var(--blue);
+}
+.timeline-event.submitted .timeline-marker { background: #059669; box-shadow: 0 0 0 1px #059669; }
+.timeline-event.admin .timeline-marker { background: #7c3aed; box-shadow: 0 0 0 1px #7c3aed; }
+.timeline-content {
+  background: #f8fafd;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 12px 14px;
+}
+.timeline-content > strong { display: block; color: var(--navy); }
+.timeline-content > small { display: block; margin-top: 3px; }
+.timeline-actor { margin: 7px 0 2px; font-size: 13px; font-weight: 600; }
+.timeline-comments { margin: 5px 0 0; color: var(--muted); font-size: 14px; white-space: pre-wrap; }
+.timeline-current { margin-top: 18px; font-weight: 600; }
